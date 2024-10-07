@@ -1,0 +1,25 @@
+<!Doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Log in</title>
+    <link rel="stylesheet" th:href="@{/css/login.css}" href="/css/login.css">
+</head>
+<body>
+<header class="header">
+    <div class="header__logo">Artem's Social Network</div>
+</header>
+<div class="wrapper">
+    <div class="login-error-block" th:if="${fieldsError}">Bad Credentials</div>
+    <form class="form-block" th:action="@{/login}" th:method="post" th:object="${user}">
+        <label><input th:field="*{username}" class="form-block__input" type="text" placeholder="Enter your username" required></label>
+        <label><input th:field="*{password}" class="form-block__input" type="password" placeholder="Enter your password" required></label>
+        <button class="form-block__button" type="submit">Log In</button>
+        <p>Do not have account yet click: <a href="/register">Register</a></p>
+    </form>
+</div>
+</body>
+</html>

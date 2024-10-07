@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration</title>
+<!--     <link rel="stylesheet"  href="register.css">-->
+<!--    <link rel="stylesheet" href="login.css">-->
+    <link rel="stylesheet" th:href="@{/css/register.css}" href="/css/register.css">
+</head>
+<body>
+<header class="header">
+    <div class="header__logo">Artem's Social Network</div>
+</header>
+<main class="wrapper">
+    <div class="success-block" th:if="${success}">Registration successful</div>
+    <form class="form-block" th:action="@{/register}" th:method="post" th:object="${user}">
+        <label><input th:field="*{username}" class="form-block__input" type="text" placeholder="Enter your username" required></label>
+        <div class="form-block__error" th:if="${#fields.hasErrors('username')}" th:errors="*{username}">Username error</div>
+        <label><input th:field="*{email}" class="form-block__input" type="email" placeholder="Enter your email" required></label>
+        <div class="form-block__error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Email error</div>
+        <label><input th:field="*{firstName}" class="form-block__input" type="text" placeholder="Enter your First name" required></label>
+        <div class="form-block__error" th:if="${#fields.hasErrors('firstName')}" th:errors="*{firstName}">Name error</div>
+        <label><input th:field="*{secondName}" class="form-block__input" type="text" placeholder="Enter your second name"></label>
+        <label><input th:field="*{password}" class="form-block__input" type="password" placeholder="Enter password"></label>
+        <div class="form-block__error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}">Password error</div>
+        <button class="form-block__button">Register</button>
+        <div class="form-block__error" th:if="${userExist}" th:text="${userExist}"></div>
+        <p>Back to: <a href="/login">Login</a></p>
+    </form>
+</main>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" th:href="@{/css/friends.css}">
+</head>
+<body>
+    <div class="wrapper">
+        <aside>
+            <nav class="navigation-list">
+                <ul class="navigation-list__items">
+                    <li class="navigation-list__item"><a href="#">Home</a></li>
+                    <li class="navigation-list__item"><a href="#">Messages</a></li>
+                    <li class="navigation-list__item"><a th:href="@{/profile/friends}">Friends</a></li>
+                </ul>
+            </nav>
+        </aside>
+        <div class="friend-block">
+            <div class="friend-requests-block" th:if="${friendShipRequests}">
+                <ul class="request__list-items">
+                    <p>Requested friends</p>
+                    <li class="list__item" th:each="friendShipRequest : ${friendShipRequests}">
+                        <a th:href="@{/profile/{id}(id=${friendShipRequest.getUserId()})}" th:text="${userRepo.findUserById(friendShipRequest.getUserId()).getUsername()}"></a>
+                        <form th:method="patch" th:action="@{/profile/friends/{id}(id=${friendShipRequest.getUserId()})}">
+                            <button type="submit">Accept</button>
+                        </form>
+                        <form th:method="delete" th:action="@{/profile/friends/{id}(id=${friendShipRequest.getUserId()})}">
+                            <button type="submit">Decline</button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+            <p>Your friends</p>
+            <div class="friend-accepted-by-user-block" th:if="${acceptedFriendShipsByUser}">
+                <ul class="user-accepted__list-items">
+                    <li class="list__item" th:each="acceptedFriendShipByUser : ${acceptedFriendShipsByUser}">
+                        <a class="" th:href="@{/profile/{id}(id=${acceptedFriendShipByUser.getUserId()})}" th:text="${userRepo.findUserById(acceptedFriendShipByUser.getUserId()).getUsername()}"></a>
+                    </li>
+                </ul>
+            </div>
+            <div class="friend-accepted-by-friend-block" th:if="${acceptedFriendShipsByFriend}">
+                <ul class="friend-accepted__list-items">
+                    <li class="list__item" th:each="acceptedFriendShipByFriend : ${acceptedFriendShipsByFriend}">
+                        <a th:href="@{/profile/{id}(id=${acceptedFriendShipByFriend.getFriendId()})}" th:text="${userRepo.findUserById(acceptedFriendShipByFriend.getFriendId()).getUsername()}"></a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" th:href="@{/css/settings.css}" href="/css/settings.css">
+</head>
+<body>
+<div class="wrapper">
+    <header class="header">
+        <div class="header__logo">Artem's Social Network</div>
+    </header>
+
+    <div class="profile-settings-text">Profile Settings</div>
+    <form class="setting-form" th:action="@{/profile/settings}" th:method="post" th:object="${user}" enctype="multipart/form-data">
+        <label><input class="setting__input" type="text" th:field="*{firstName}"></label>
+        <div class="form-block__error" th:if="${#fields.hasErrors('firstName')}" th:errors="*{firstName}">FirstName error</div>
+        <label><input class="setting__input" type="text" th:field="*{secondName}"></label>
+        <label><input class="setting__input" type="text" th:field="*{username}"></label>
+        <div class="form-block__error" th:if="${#fields.hasErrors('username')}" th:errors="*{username}">Username error</div>
+        <div class="form-block__error" th:if="${usernameState}">Username taken</div>
+        <label><input class="setting__input-email" type="text" th:field="*{email}"></label>
+        <input type="file" name="file">
+        <button class="setting__button" type="submit">Save</button>
+    </form>
+<!--    <div class="profile-image-upload">-->
+<!--        <div class="upload__text">Upload an image</div>-->
+<!--        <form class="upload__form" action="/profile/upload" method="post" enctype="multipart/form-data">-->
+<!--            -->
+<!--        </form>-->
+<!--    </div>-->
+</div>
+</body>
+</html>
