@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <link rel="stylesheet" th:href="@{/css/chat.css}">
+</head>
+<body>
+<div class="wrapper">
+    <aside>
+        <nav class="navigation-list">
+            <ul class="navigation-list__items">
+                <li class="navigation-list__item"><a href="#">Home</a></li>
+                <li class="navigation-list__item"><a href="#">Messages</a></li>
+                <li class="navigation-list__item"><a href="#">Friends</a></li>
+            </ul>
+        </nav>
+    </aside>
+    <main id="chat-block">
+        <div id="chat-block__chat-members"></div>
+        <div id="chat-block__messages-area">
+
+        </div>
+        <div id="chat-block__send-block">
+            <form action="#">
+                <input class="send__text-input" type="text" placeholder="Type the text">
+                <button class="send__button" type="submit"></button>
+            </form>
+        </div>
+    </main>
+</div>
+</body>
+</html>

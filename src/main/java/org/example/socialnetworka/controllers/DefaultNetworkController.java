@@ -4,12 +4,16 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import org.example.socialnetworka.chats.Chat;
 import org.example.socialnetworka.friends.FriendShip;
+import org.example.socialnetworka.repository.ChatRepository;
 import org.example.socialnetworka.repository.FriendShipRepository;
 import org.example.socialnetworka.repository.UserRepository;
+import org.example.socialnetworka.repository.UsersChatsRepository;
 import org.example.socialnetworka.services.UserService;
 import org.example.socialnetworka.services.UserServiceImpl;
 import org.example.socialnetworka.users.User;
+import org.example.socialnetworka.users.UserChat;
 import org.example.socialnetworka.users.UserDAO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -40,22 +44,21 @@ public class DefaultNetworkController {
 
     private final UserRepository userRepository;
     private final FriendShipRepository friendShipRepository;
+    private final UsersChatsRepository usersChatsRepository;
+    private final ChatRepository chatRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserService userService;
 
-
-//    private final FileService fileService;
     @Autowired
     public DefaultNetworkController(UserRepository userRepository, PasswordEncoder passwordEncoder,
-                                    UserService userService, FriendShipRepository friendShipRepository
-//            ,
-//                                    FileService fileService
-    ) {
+                                    UserService userService, FriendShipRepository friendShipRepository,
+                                    UsersChatsRepository usersChatsRepository, ChatRepository chatRepository) {
         this.userRepository = userRepository;
         this.friendShipRepository = friendShipRepository;
         this.passwordEncoder = passwordEncoder;
         this.userService = userService;
-//        this.fileService = fileService;
+        this.usersChatsRepository = usersChatsRepository;
+        this.chatRepository = chatRepository;
     }
 
     @GetMapping("/login")
@@ -91,8 +94,15 @@ public class DefaultNetworkController {
     @GetMapping("/logout")
     public String logout(HttpServletResponse response) {
         SecurityContextHolder.getContext().getAuthentication().setAuthenticated(false);
-        return "redirect:/login";
+        return "redirect:/login?logout=true";
     }
+
+//    @GetMapping("/initPTP")
+//    public String initPTP() {
+//
+//        return "redirect:/profile";
+//    }
+
 
     @GetMapping("/profile")
     public String profile(Model model) {
@@ -107,11 +117,9 @@ public class DefaultNetworkController {
             model.addAttribute(user);
         }
 
-        System.out.println("Has permission");
         model.addAttribute("Permission", "Approved");
         return "profile";
     }
-
     @GetMapping("/profile/{id}")
     public String particularProfile(Model model, @PathVariable Long id) {
         var user = userRepository.findUserById(id);
@@ -119,7 +127,6 @@ public class DefaultNetworkController {
             model.addAttribute("user", userRepository.findUserById(id));
             Authentication authentication = getAuthentication();
             Object principal = authentication.getPrincipal();
-            System.out.println(authentication.getPrincipal() + "  " + principal.getClass());
             User userAuth = null;
             if (principal instanceof UserDetails userDetails) {
                 userAuth = (User) userRepository.findUserByUsername(userDetails.getUsername());
@@ -129,45 +136,18 @@ public class DefaultNetworkController {
 
             if (userAuth.getId().equals(user.getId())) {
                 model.addAttribute("Permission", "Approved");
-//                model.addAttribute("hasPermission");
+            } else {
+                FriendShip friendShipByUser = friendShipRepository.findFriendShipByUserIdAndFriendIdAndStatus(userAuth.getId(), user.getId(), "Accepted");
+                FriendShip friendShipByFriend = friendShipRepository.findFriendShipByUserIdAndFriendIdAndStatus(user.getId(), userAuth.getId(), "Accepted");
+                FriendShip friendShipRequestByUser = friendShipRepository.findFriendShipByUserIdAndFriendIdAndStatus(userAuth.getId(), user.getId(), "Requested");
+                FriendShip friendShipRequestByFriend = friendShipRepository.findFriendShipByUserIdAndFriendIdAndStatus(user.getId(), userAuth.getId(), "Requested");
+                if (friendShipByUser != null || friendShipByFriend != null) {
+                    model.addAttribute("IsAFriend", "Is a friend");
+                } else if (friendShipRequestByUser == null && friendShipRequestByFriend == null) {
+                    model.addAttribute("NotAFriend", "Not a friend");
+                }
             }
-            FriendShip friendShipByUser = friendShipRepository.findFriendShipByUserIdAndFriendIdAndStatus(userAuth.getId(), user.getId(), "Accepted");
-            FriendShip friendShipByFriend = friendShipRepository.findFriendShipByUserIdAndFriendIdAndStatus(user.getId(), userAuth.getId(), "Accepted");
-            FriendShip friendShipRequestByUser = friendShipRepository.findFriendShipByUserIdAndFriendIdAndStatus(userAuth.getId(), user.getId(), "Requested");
-            FriendShip friendShipRequestByFriend = friendShipRepository.findFriendShipByUserIdAndFriendIdAndStatus(user.getId(), userAuth.getId(), "Requested");
 
-            if (friendShipByUser != null || friendShipByFriend != null) {
-                model.addAttribute("IsAFriend", "Is a friend");
-            } else if (friendShipRequestByUser == null && friendShipRequestByFriend == null) {
-                model.addAttribute("NotAFriend", "Not a friend");
-            }
-//
-//            List<FriendShip> friendShips = friendShipRepository.findAllByUserIdAndFriendId(userAuth.getId(), user.getId());
-//            if (friendShips.isEmpty()) {
-//                friendShips = friendShipRepository.findAllByUserIdAndFriendId(user.getId(), userAuth.getId());
-//                if (friendShips.isEmpty()) {
-//                    model.addAttribute("NotAFriend", "Not a friend");
-//                } else {
-//                    model.addAttribute("IsAFriend", "Is a friend");
-//                }
-//            } else {
-//                model.addAttribute("IsAFriend", "Is a friend");
-//            }
-//            boolean exist = false;
-//            if (!friendShips.isEmpty()){
-//                for (FriendShip friendShip : friendShips) {
-//                    if (friendShip.getUserId().equals(userAuth.getId()) && friendShip.getFriendId().equals(user.getId())) {
-//                        exist = true;
-//                        break;
-//                    }
-//
-//                }
-//                if (!exist) {
-//                    model.addAttribute("NotAFriend", "Not a friend");
-//                }
-//            } else if (!userAuth.getId().equals(user.getId())) {
-//                model.addAttribute("NotAFriend", "Not a friend");
-//            }
             return "profile";
         }
 
@@ -227,7 +207,7 @@ public class DefaultNetworkController {
         } else {
             userRepository.save(new User(user.getId(), userDAO.getFirstName(), userDAO.getSecondName(), user.getEmail(),
                     user.getPassword(), userDAO.getUsername(), user.getIdImagePath()));
-            System.out.println("Content type " + file.getContentType() + " Resource  " + file.getResource() + " Original Name " + file.getOriginalFilename());
+//            System.out.println("Content type " + file.getContentType() + " Resource  " + file.getResource() + " Original Name " + file.getOriginalFilename());
         }
 
         Collection<? extends GrantedAuthority> nowAuthorities =
@@ -240,34 +220,12 @@ public class DefaultNetworkController {
         return "redirect:/profile";
     }
 
-//    @GetMapping("/profile/friends")
-//    public String displayFriends(Model model) {
-//        java.util.List<User> listOfUsers= userRepository.findAll();
-//        model.addAttribute("users", listOfUsers);
-//        return "friends";
-//    }
-
     @PostMapping("/profile/friendRequest/{id}")
     public String friendRequest(@PathVariable Long id, Principal principal) {
         User user = userRepository.findUserByUsername(principal.getName());
         friendShipRepository.save(new FriendShip(user.getId(), id, "Requested"));
         return "redirect:/profile/" + id;
     }
-
-//    @GetMapping("/profile/settings/uploadFile")
-//    public String index() {
-//        return "upload";
-//    }
-//
-//    @PostMapping(path = "/profile/settings/uploadFile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-//    public String uploadFile(@RequestParam("file") MultipartFile file, RedirectAttributes redirectAttributes) throws IOException {
-//        System.out.println("Uploading file");
-//        fileService.uploadFile(file);
-//
-//        redirectAttributes.addFlashAttribute("message",
-//                "You successfully uploaded " + file.getOriginalFilename() + "!");
-//        return "redirect:/profile/settings";
-//    }
 
     @GetMapping("/profile/friends")
     public String showFriends(Model model, Principal principal) {
@@ -280,15 +238,17 @@ public class DefaultNetworkController {
             model.addAttribute("friendShipRequests", friendShipRequests);
             isAddUserRepo = true;
         }
+
         if (!acceptedFriendShipsByUser.isEmpty()) {
             model.addAttribute("acceptedFriendShipsByUser", acceptedFriendShipsByUser);
             isAddUserRepo = true;
         }
+
         if (!acceptedFriendShipsByFriend.isEmpty()) {
             model.addAttribute("acceptedFriendShipsByFriend", acceptedFriendShipsByFriend);
             isAddUserRepo = true;
-
         }
+
         if (isAddUserRepo)
             model.addAttribute("userRepo", userRepository);
 
@@ -313,10 +273,29 @@ public class DefaultNetworkController {
         FriendShip friendShip = friendShipRepository.findFriendShipByUserIdAndFriendId(id, userRepository.findUserByUsername(principal.getName()).getId());
         friendShip.setStatus("Accepted");
         friendShipRepository.save(friendShip);
+        Chat chat = new Chat(principal.getName() + ',' + userRepository.findUserById(id).getUsername());
+        chatRepository.save(chat);
+        Long chatId = chatRepository.findChatByName(principal.getName() + ',' + userRepository.findUserById(id).getUsername()).getId();
+        usersChatsRepository.save(new UserChat(chatId , id));
+        usersChatsRepository.save(new UserChat(chatId, userRepository.findUserByUsername(principal.getName()).getId()));
         return "redirect:/profile/friends";
     }
 
     private Authentication getAuthentication() {
         return SecurityContextHolder.getContext().getAuthentication();
+    }
+
+    @GetMapping("/profile/chats")
+    public String chats(Model model, Principal principal) {
+
+        model.addAttribute("Chats", usersChatsRepository.findAllByUserId(userRepository.findUserByUsername(principal.getName()).getId()));
+        model.addAttribute("ChatRepo", chatRepository);
+        return "chats";
+    }
+    
+    @GetMapping("/profile/chats/chat/{id}")
+    public String chat(@PathVariable("id") Long id, Model model) {
+
+        return "chat";
     }
 }
