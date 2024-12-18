@@ -7,28 +7,35 @@
     <link rel="stylesheet" th:href="@{/css/chat.css}">
 </head>
 <body>
+<header class="header">Artem's Social network<a th:href="@{/logout}">Log out</a></header>
 <div class="wrapper">
     <aside>
         <nav class="navigation-list">
             <ul class="navigation-list__items">
-                <li class="navigation-list__item"><a href="#">Home</a></li>
-                <li class="navigation-list__item"><a href="#">Messages</a></li>
-                <li class="navigation-list__item"><a href="#">Friends</a></li>
+                <li class="navigation-list__item"><a th:href="@{/profile}">Home</a></li>
+                <li class="navigation-list__item"><a th:href="@{/profile/chats}">Chats</a></li>
+                <li class="navigation-list__item"><a th:href="@{/profile/friends}">Friends</a></li>
             </ul>
         </nav>
     </aside>
     <main id="chat-block">
         <div id="chat-block__chat-members"></div>
         <div id="chat-block__messages-area">
-
+            <textarea id=""></textarea>
         </div>
         <div id="chat-block__send-block">
-            <form action="#">
+
+            </textarea>
+            <form id="messageForm" action="#">
                 <input class="send__text-input" type="text" placeholder="Type the text">
                 <button class="send__button" type="submit"></button>
             </form>
         </div>
     </main>
 </div>
+<div id="username" th:text="${user.getUsername()}"></div>
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs/lib/stomp.min.js"></script>
+<script src="/js/messageSubscription.js"></script>
 </body>
 </html>

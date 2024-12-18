@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <link rel="stylesheet" th:href="@{/css/newchat.css}">
+</head>
+<body>
+<header class="header">Artem's Social network<a th:href="@{/logout}">Log out</a></header>
+    <div class="wrapper">
+        <aside>
+            <nav class="navigation-list">
+                <ul class="navigation-list__items">
+                    <li class="navigation-list__item"><a th:href="@{/profile}">Home</a></li>
+                    <li class="navigation-list__item"><a th:href="@{/profile/chats}">Chats</a></li>
+                    <li class="navigation-list__item"><a th:href="@{/profile/friends}">Friends</a></li>
+                </ul>
+            </nav>
+        </aside>
+        <main id="chat-block">
+            <ul class="message-list">
+                <li th:each="Message : ${listOfMessages}"
+                    class="message-block__person" th:text="${userMap[Message.getSenderId()]} + ': ' + ${Message.getMessageContent()}">
+                </li>
+            </ul>
+            <form class="send-message__form" action="">
+                <input class="message__input" type="text" placeholder="Write smth...">
+                <button class="send-message__button" type="submit">Send</button>
+            </form>
+        </main>
+    </div>
+
+    <div style="visibility: hidden" id="username" th:text="${user.getUsername()}"></div>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs/lib/stomp.min.js"></script>
+    <script src="/js/newMessageSubscription.js"></script>
+</body>
+</html>

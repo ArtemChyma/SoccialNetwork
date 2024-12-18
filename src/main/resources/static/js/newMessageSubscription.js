@@ -4,7 +4,11 @@ let stompClient = null;
 let username = null;
 let messageForm;
 let sendInputText;
-
+let messageList;
+if (document.querySelector('.message-list')) {
+    messageList = document.querySelector('.message-list');
+    messageList.scrollTop = messageList.scrollHeight;
+}
 // Подключение к WebSocket
 connect();
 function connect(event) {
@@ -17,8 +21,8 @@ function connect(event) {
     }
     console.log(document.title);
     if (document.title === 'Chat') {
-        messageForm = document.querySelector('#messageForm');
-        sendInputText = document.querySelector('.send__text-input');
+        messageForm = document.querySelector('.send-message__form');
+        sendInputText = document.querySelector('.message__input');
         messageForm.addEventListener('submit', sendMessage, true);
     }
     // event.preventDefault();
@@ -63,14 +67,22 @@ function sendMessage(event) {
 function onMessageReceived(payload) {
     let message = JSON.parse(payload.body);
     console.log('Message received from: ' + message.sender + 'Content: ' + message.content);
-    // let messageElement = document.createElement('li');
 
     if (message.type === 'JOIN') {
         // messageElement.textContent = message.sender + ' joined the chat!';
     } else if (message.type === 'LEAVE') {
         // messageElement.textContent = message.sender + ' left the chat!';
-    } else if (message.type === 'CHAT') {
-
+    } else if (message.type === 'CHAT' && document.title === 'Chat') {
+        let currentUserLocation = window.location.pathname.split('/');
+        // console.log(typeof currentUserLocation[currentUserLocation.length - 1] + '    ' + typeof message.chatId);
+        if (Number(currentUserLocation[currentUserLocation.length - 1]) === message.chatId) {
+            let messageItem = document.createElement('li');
+            messageList = document.querySelector('.message-list');
+            messageItem.textContent = message.sender + ': ' + message.content;
+            messageItem.className = ".message-block__person";
+            messageList.appendChild(messageItem);
+            messageList.scrollTop = messageList.scrollHeight;
+        }
     } else {
         // messageElement.textContent = message.sender + ': ' + message.content;
     }

@@ -6,16 +6,16 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.example.socialnetworka.chats.Chat;
 import org.example.socialnetworka.friends.FriendShip;
-import org.example.socialnetworka.repository.ChatRepository;
-import org.example.socialnetworka.repository.FriendShipRepository;
-import org.example.socialnetworka.repository.UserRepository;
-import org.example.socialnetworka.repository.UsersChatsRepository;
+import org.example.socialnetworka.message.Message;
+import org.example.socialnetworka.repository.*;
 import org.example.socialnetworka.services.UserService;
 import org.example.socialnetworka.services.UserServiceImpl;
 import org.example.socialnetworka.users.User;
 import org.example.socialnetworka.users.UserChat;
 import org.example.socialnetworka.users.UserDAO;
+import org.example.socialnetworka.users.UserPost;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -38,6 +38,8 @@ import java.security.Principal;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Controller
 public class DefaultNetworkController {
@@ -48,17 +50,25 @@ public class DefaultNetworkController {
     private final ChatRepository chatRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserService userService;
+    private final MessageRepository messageRepository;
+    private final UserPostRepository userPostRepository;
+
+    @Value("${app.storage.path}")
+    String storagePath;
 
     @Autowired
     public DefaultNetworkController(UserRepository userRepository, PasswordEncoder passwordEncoder,
                                     UserService userService, FriendShipRepository friendShipRepository,
-                                    UsersChatsRepository usersChatsRepository, ChatRepository chatRepository) {
+                                    UsersChatsRepository usersChatsRepository, ChatRepository chatRepository,
+                                    MessageRepository messageRepository, UserPostRepository userPostRepository) {
         this.userRepository = userRepository;
         this.friendShipRepository = friendShipRepository;
         this.passwordEncoder = passwordEncoder;
         this.userService = userService;
         this.usersChatsRepository = usersChatsRepository;
         this.chatRepository = chatRepository;
+        this.messageRepository = messageRepository;
+        this.userPostRepository = userPostRepository;
     }
 
     @GetMapping("/login")
@@ -97,27 +107,25 @@ public class DefaultNetworkController {
         return "redirect:/login?logout=true";
     }
 
-//    @GetMapping("/initPTP")
-//    public String initPTP() {
-//
-//        return "redirect:/profile";
-//    }
-
 
     @GetMapping("/profile")
-    public String profile(Model model) {
+    public String profile(Model model, Principal principal) {
         Authentication authentication = getAuthentication();
-        Object principal = authentication.getPrincipal();
-        System.out.println(authentication.getPrincipal() + "  " + principal.getClass());
-        if (principal instanceof UserDetails userDetails) {
+        Object _principal = authentication.getPrincipal();
+        System.out.println(authentication.getPrincipal() + "  " + _principal.getClass());
+        if (_principal instanceof UserDetails userDetails) {
             var user = (User) userRepository.findUserByUsername(userDetails.getUsername());
             model.addAttribute("user", user);
-        } else if (principal instanceof String){
-            User user = userRepository.findUserByUsername((String) principal);
+        } else if (_principal instanceof String){
+            User user = userRepository.findUserByUsername((String) _principal);
             model.addAttribute(user);
         }
-
+        model.addAttribute("storage", storagePath);
         model.addAttribute("Permission", "Approved");
+        model.addAttribute("userPost", new UserPost());
+        if (userPostRepository.findAllByPosterId(userRepository.findUserByUsername(principal.getName()).getId()) != null)
+            model.addAttribute("posts", userPostRepository.findAllByPosterId(userRepository.findUserByUsername(principal.getName()).getId()).reversed());
+
         return "profile";
     }
     @GetMapping("/profile/{id}")
@@ -134,9 +142,12 @@ public class DefaultNetworkController {
                 userAuth = userRepository.findUserByUsername((String) principal);
             }
 
-            if (userAuth.getId().equals(user.getId())) {
+            if (userAuth != null && userAuth.getId().equals(user.getId())) {
                 model.addAttribute("Permission", "Approved");
-            } else {
+                model.addAttribute("userPost", new UserPost());
+                if (userPostRepository.findAllByPosterId(userRepository.findUserByUsername(userAuth.getUsername()).getId()) != null)
+                    model.addAttribute("posts", userPostRepository.findAllByPosterId(userRepository.findUserByUsername(userAuth.getUsername()).getId()).reversed());
+            } else if (userAuth != null){
                 FriendShip friendShipByUser = friendShipRepository.findFriendShipByUserIdAndFriendIdAndStatus(userAuth.getId(), user.getId(), "Accepted");
                 FriendShip friendShipByFriend = friendShipRepository.findFriendShipByUserIdAndFriendIdAndStatus(user.getId(), userAuth.getId(), "Accepted");
                 FriendShip friendShipRequestByUser = friendShipRepository.findFriendShipByUserIdAndFriendIdAndStatus(userAuth.getId(), user.getId(), "Requested");
@@ -147,7 +158,8 @@ public class DefaultNetworkController {
                     model.addAttribute("NotAFriend", "Not a friend");
                 }
             }
-
+            model.addAttribute("storage", storagePath);
+            model.addAttribute("posts", userPostRepository.findAllByPosterId(id).reversed());
             return "profile";
         }
 
@@ -175,9 +187,9 @@ public class DefaultNetworkController {
         return "settings";
     }
 
-    @PostMapping(path = "/profile/settings", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(path = "/profile/settings/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public String editSettingProfile(Model model, @ModelAttribute("user") @Valid UserDAO userDAO, BindingResult bindingResult,
-                                     @RequestParam("file") MultipartFile file, HttpServletRequest request) throws IOException{
+                                     @RequestParam("file") MultipartFile file, HttpServletRequest request, @PathVariable Long id) throws IOException{
 
         System.out.println(Arrays.toString(file.getBytes()));
         if (bindingResult.hasErrors()) {
@@ -197,16 +209,16 @@ public class DefaultNetworkController {
             }
         }
 
-        System.out.println(userDAO.getEmail());
-        User user = userRepository.findUserByEmail(userDAO.getEmail());
+        User user = userRepository.findUserById(id);
         if (!file.isEmpty()) {
             String[] imageType = file.getContentType().split("/");
-            Files.write(Paths.get("src/main/resources/static/images/" + user.getId() + "." + imageType[1]), file.getBytes());
+            System.out.println(storagePath + user.getId() + "." + imageType[1]);
+            Files.write(Paths.get(storagePath + user.getId() + "." + imageType[1]), file.getBytes());
             userRepository.save(new User(user.getId(), userDAO.getFirstName(), userDAO.getSecondName(), user.getEmail(),
-                    user.getPassword(), userDAO.getUsername(), user.getId() + "." + imageType[1]));
+                    user.getPassword(), user.getUsername(), user.getId() + "." + imageType[1]));
         } else {
             userRepository.save(new User(user.getId(), userDAO.getFirstName(), userDAO.getSecondName(), user.getEmail(),
-                    user.getPassword(), userDAO.getUsername(), user.getIdImagePath()));
+                    user.getPassword(), user.getUsername(), user.getIdImagePath()));
 //            System.out.println("Content type " + file.getContentType() + " Resource  " + file.getResource() + " Original Name " + file.getOriginalFilename());
         }
 
@@ -215,7 +227,7 @@ public class DefaultNetworkController {
                         .getAuthentication()
                         .getAuthorities();
         UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(userDAO.getUsername(), user.getPassword(), nowAuthorities);
+                new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword(), nowAuthorities);
         SecurityContextHolder.getContext().setAuthentication(authentication);
         return "redirect:/profile";
     }
@@ -273,11 +285,13 @@ public class DefaultNetworkController {
         FriendShip friendShip = friendShipRepository.findFriendShipByUserIdAndFriendId(id, userRepository.findUserByUsername(principal.getName()).getId());
         friendShip.setStatus("Accepted");
         friendShipRepository.save(friendShip);
-        Chat chat = new Chat(principal.getName() + ',' + userRepository.findUserById(id).getUsername());
-        chatRepository.save(chat);
-        Long chatId = chatRepository.findChatByName(principal.getName() + ',' + userRepository.findUserById(id).getUsername()).getId();
-        usersChatsRepository.save(new UserChat(chatId , id));
-        usersChatsRepository.save(new UserChat(chatId, userRepository.findUserByUsername(principal.getName()).getId()));
+        if (chatRepository.findChatByName(principal.getName() + ',' + userRepository.findUserById(id).getUsername()) == null) {
+            Chat chat = new Chat(principal.getName() + ',' + userRepository.findUserById(id).getUsername());
+            chatRepository.save(chat);
+            Long chatId = chatRepository.findChatByName(principal.getName() + ',' + userRepository.findUserById(id).getUsername()).getId();
+            usersChatsRepository.save(new UserChat(chatId, id));
+            usersChatsRepository.save(new UserChat(chatId, userRepository.findUserByUsername(principal.getName()).getId()));
+        }
         return "redirect:/profile/friends";
     }
 
@@ -287,15 +301,41 @@ public class DefaultNetworkController {
 
     @GetMapping("/profile/chats")
     public String chats(Model model, Principal principal) {
-
         model.addAttribute("Chats", usersChatsRepository.findAllByUserId(userRepository.findUserByUsername(principal.getName()).getId()));
         model.addAttribute("ChatRepo", chatRepository);
         return "chats";
     }
     
     @GetMapping("/profile/chats/chat/{id}")
-    public String chat(@PathVariable("id") Long id, Model model) {
+    public String chat(@PathVariable("id") Long id, Model model, Principal principal) {
+        if (usersChatsRepository.findByUserIdAndChatId(userRepository.findUserByUsername(principal.getName()).getId(), id) != null) {
+            model.addAttribute("user", userRepository.findUserByUsername(principal.getName()));
+            model.addAttribute("chatId", id);
 
-        return "chat";
+            List<Message> listOfMessages = messageRepository.findAllByChatId(id);
+            model.addAttribute("listOfMessages", listOfMessages);
+
+            Map<Long, String> userMap = userRepository.findAllById(
+                    listOfMessages.stream().map(Message::getSenderId).collect(Collectors.toSet())
+            ).stream().collect(Collectors.toMap(User::getId, User::getUsername));
+
+            model.addAttribute("userMap", userMap);
+            return "newChat";
+        }
+        return "error";
+    }
+
+
+    @PostMapping("/profile/addPost/{id}")
+    public String addPost(@PathVariable Long id, Principal principal, @ModelAttribute("userPost") UserPost userPost) {
+        UserPost newUserPost = new UserPost(id, principal.getName(), userPost.getPostContent(), userRepository.findUserByUsername(principal.getName()).getIdImagePath());
+        userPostRepository.save(newUserPost);
+        return "redirect:/profile";
+    }
+
+    @DeleteMapping("/profile/deletePost/{id}")
+    public String deletePost(@PathVariable Long id) {
+        userPostRepository.deleteById(id);
+        return "redirect:/profile";
     }
 }

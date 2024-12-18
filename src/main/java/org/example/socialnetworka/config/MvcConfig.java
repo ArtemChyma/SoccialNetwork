@@ -10,8 +10,8 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class MvcConfig implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/images/**")
-                .addResourceLocations("file:C:/Users/artem/IdeaProjects/SocialNetworkA/src/main/resources/static/images/")
+        registry.addResourceHandler("/imageStorage/**")
+                .addResourceLocations("file:C:/Users/artem/imageStorage/")
                 .setCachePeriod(0);
     }
 }

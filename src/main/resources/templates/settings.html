@@ -13,14 +13,14 @@
     </header>
 
     <div class="profile-settings-text">Profile Settings</div>
-    <form class="setting-form" th:action="@{/profile/settings}" th:method="post" th:object="${user}" enctype="multipart/form-data">
+    <form class="setting-form" th:action="@{/profile/settings/{id}(id=${user.getId()})}" th:method="post" th:object="${user}" enctype="multipart/form-data">
         <label><input class="setting__input" type="text" th:field="*{firstName}"></label>
         <div class="form-block__error" th:if="${#fields.hasErrors('firstName')}" th:errors="*{firstName}">FirstName error</div>
         <label><input class="setting__input" type="text" th:field="*{secondName}"></label>
-        <label><input class="setting__input" type="text" th:field="*{username}"></label>
-        <div class="form-block__error" th:if="${#fields.hasErrors('username')}" th:errors="*{username}">Username error</div>
-        <div class="form-block__error" th:if="${usernameState}">Username taken</div>
-        <label><input class="setting__input-email" type="text" th:field="*{email}"></label>
+<!--        <label><input class="setting__input" type="text" th:field="*{username}"></label>-->
+<!--        <div class="form-block__error" th:if="${#fields.hasErrors('username')}" th:errors="*{username}">Username error</div>-->
+<!--        <div class="form-block__error" th:if="${usernameState}">Username taken</div>-->
+<!--        <label><input class="setting__input-email" type="text" th:field="*{email}"></label>-->
         <input type="file" name="file">
         <button class="setting__button" type="submit">Save</button>
     </form>

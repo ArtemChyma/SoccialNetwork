@@ -50,7 +50,7 @@ public class User {
     private String password;
     @Column(unique = true)
     private String username;
-    @Column(unique = true)
+//    @Column(unique = true)
     private String idImagePath;
 
     public String getIdImagePath() {

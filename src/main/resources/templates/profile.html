@@ -13,8 +13,8 @@
     <aside>
         <nav class="navigation-list">
             <ul class="navigation-list__items">
-                <li class="navigation-list__item"><a href="#">Home</a></li>
-                <li class="navigation-list__item"><a th:href="@{/profile/chats}">Messages</a></li>
+                <li class="navigation-list__item"><a th:href="@{/profile}">Home</a></li>
+                <li class="navigation-list__item"><a th:href="@{/profile/chats}">Chats</a></li>
                 <li class="navigation-list__item"><a th:href="@{/profile/friends}">Friends</a></li>
             </ul>
         </nav>
@@ -24,8 +24,7 @@
             <div class="personal-image-friend-state">
                 <div class="friend-state__text" th:if="${IsAFriend}">You are friends</div>
                 <div class="personal__image-block">
-                    <img class="personal__image" th:src="@{'/images/' + ${user.idImagePath}}" alt="Nigger">
-                    <!--                <div th:text="'/images/' + ${user.idImagePath}"></div>-->
+                    <img class="personal__image" th:src="@{/{imagePath}(imagePath=${user.getIdImagePath()})}" alt="NoPicture"/>
                 </div>
             </div>
 
@@ -38,7 +37,7 @@
                     </ul>
                 </div>
                 <div class="personal__text-description">
-                    <label><textarea name="" id="personal__text-description" readonly>I am a professional nigger by playing football</textarea></label>
+<!--                    <label><textarea name="" id="personal__text-description" readonly>I am a professional</textarea></label>-->
                 </div>
             </div>
             <div class="personal__settings">
@@ -54,11 +53,39 @@
                 <button class="delete__button" type="submit" th:if="${IsAFriend}">Delete from friends</button>
             </form>
         </div>
+        <hr>
+        <div th:if="${Permission}" class="post-content-block">
+            <div class="post__add-block">
+                <form class="post__add-form" th:action="@{/profile/addPost/{id}(id=${user.getId()})}" th:method="post" th:object="${userPost}">
+                    <textarea th:field="*{postContent}" placeholder="Share some news with others"></textarea>
+                    <button class="post-text__submit-button"></button>
+                </form>
+            </div>
+        </div>
         <div class="profile__posts">
+            <ul class="posts__list">
+                <li th:each="post : ${posts}" class="list__post">
+                    <div class="post__edition">
+                        <div class="post__poster-info">
+                            <img th:src="@{/{imagePath}(imagePath=${user.getIdImagePath()})}" alt="logo">
+                            <div class="info__username"><a th:href="@{/profile/${post.getPosterId()}}" th:text="${post.getPosterUsername()}"></a></div>
+                        </div>
+                        <form th:if="${Permission}" class="post__delete" th:action="@{/profile/deletePost/{id}(id=${post.getId()})}" th:method="delete">
+                            <button type="submit">Delete Post</button>
+                        </form>
+                    </div>
+                    <div class="post__text" th:text="${post.getPostContent()}"></div>
+                </li>
+            </ul>
         </div>
     </main>
 </div>
 
 <footer></footer>
+<form id="form-block"></form>
+<div th:if="${Permission}" id="username" th:text="${user.getUsername()}" style="visibility: hidden"></div>
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs/lib/stomp.min.js"></script>
+<script src="/js/messageSubscription.js"></script>
 </body>
 </html>

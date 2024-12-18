@@ -1,3 +1,6 @@
+* {
+    box-sizing: border-box;
+}
 html, body {
     height: 100%;
 }
@@ -19,7 +22,6 @@ body {
     align-items: center;
     margin-top: 25px;
     font-size: 24px;
-    /* background-color: rgb(183, 183, 255); */
 }
 
 .wrapper {
@@ -34,13 +36,11 @@ ul {
     padding: 0;
     font-size: 20px;
     list-style: none;
-    /*background: brown;*/
+    /* background: brown; */
 }
 
 aside {
-    /* flex: 1; */
-    /* background-color: aqua; */
-    flex: 1;
+    /*flex: 1;*/
     /*display: flex;*/
     /* background-color: aqua; */
     /* background-color: rgb(243, 243, 243); */
@@ -48,8 +48,10 @@ aside {
     text-align: center;
     box-sizing: border-box;
     min-height: 85vh;
-    /*align-items: center;*/
+    width: 650px;
 }
+
+
 
 .navigation-list {
     margin-top: 300px;
@@ -63,7 +65,7 @@ aside {
 }
 
 .navigation-list__item a {
-    font-size: 18px;
+    font-size: 22px;
     text-decoration: none;
     color: black;
 }
@@ -81,52 +83,63 @@ aside {
 }
 
 #chat-block {
-    position: relative;
-    flex: 2;
-    height: 650px;
-    background-color: rgb(184, 223, 255);
-    border-radius: 20px;
-}
-
-#chat-block__chat-members {
-    width: 100%;
-    height: 50px;
-    border-radius: 20px;
-    background-color: rgb(194, 194, 194);
-}
-
-#chat-block__messages-area {
-    width: 100%;
-
-    /* background-color: aquamarine; */
-
-}
-
-form {
+    flex: 1;
     display: flex;
-    justify-content: center;
-    align-items: center;
-    position: absolute;
-    bottom: 30px;
-    /* padding-bottom: 35px; */
-
+    flex-direction: column;
+    min-height: 85vh;
+    max-height: 85vh;
 }
 
-.send__text-input {
-    box-sizing: border-box;
-    width: 860px;
-    height: 40px;
-    border-radius: 10px;
-    outline: none;
+.message-list {
+    width: 100%;
+    position: relative;
+    /*height: 700px;*/
+    overflow-y: scroll;
+    /*box-sizing: border-box;*/
     border: 1px solid silver;
-    padding-left: 10px;
+    min-height: 90%;
 }
 
-.send__button {
+.message-list li {
+    margin-top: 10px;
+    display: flex;
+    justify-content: left;
+    align-items: center;
+}
+
+.message-list li:nth-child(odd){
+    background-color: #F1AE75FF;
+}
+
+.message-list__item {
+    margin: 10px;
+    background-color: gainsboro;
+    
+}
+
+.send-message__form {
+    /* background-color: antiquewhite; */
     box-sizing: border-box;
-    width: 40px;
-    height: 35px;
-    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    height: 100px;
+    border: 1px solid silver;
+
+}
+
+.message__input {
+    width: 90%;
+    height: 40px;
+    box-sizing: border-box;
+    border: 1px solid silver;
+    outline: none;
+    padding: 5px;
+    font-family: cursive;
+}
+
+.send-message__button {
+    height: 30px;
     outline: none;
     border: 1px solid silver;
 }

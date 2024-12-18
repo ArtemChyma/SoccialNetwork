@@ -8,6 +8,7 @@ import lombok.Setter;
 
 @Setter
 @Getter
+@AllArgsConstructor
 @NoArgsConstructor
 @Entity
 @Table(name = "messages")
@@ -19,5 +20,11 @@ public class Message {
     private Long chatId;
     private Long senderId;
     private String messageContent;
+
+    public Message(Long chatId, Long senderId, String messageContent) {
+        this.chatId = chatId;
+        this.senderId = senderId;
+        this.messageContent = messageContent;
+    }
 
 }
